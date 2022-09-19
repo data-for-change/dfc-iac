@@ -5,6 +5,10 @@ jobs:
   ci:
     runs-on: ubuntu-22.04
     steps:
+    - run: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" &&\
+        unzip awscliv2.zip &&\
+        sudo ./aws/install --update
     - env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         VAULT_CLI_VERSION: "1.10.4"
@@ -20,7 +24,10 @@ jobs:
         uci github actions self-checkout --config-user-name "dfc-iac-ci" &&\
         uci vault install --version $VAULT_CLI_VERSION &&\
         uci terraform install --version $TERRAFORM_VERSION &&\
+        uci kubectl install --version "v1.24.2" &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
         terraform init "-backend-config=$(bin/get_backend_config.py)" &&\
         eval "$(bin/get_secret_envvars.py)" &&\
+        kubectl get node &&\
+        aws eks get-token --cluster-name main --region eu-central-1 &&\
         terraform plan -input=false -lock=false
