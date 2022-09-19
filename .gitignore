@@ -4,3 +4,4 @@
 .kubeconfig
 .env
 .approle-*
+venv

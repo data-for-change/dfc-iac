@@ -25,9 +25,8 @@ jobs:
         uci vault install --version $VAULT_CLI_VERSION &&\
         uci terraform install --version $TERRAFORM_VERSION &&\
         uci kubectl install --version "v1.24.2" &&\
+        pip install -r requirements.txt &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
         terraform init "-backend-config=$(bin/get_backend_config.py)" &&\
         eval "$(bin/get_secret_envvars.py)" &&\
-        kubectl get node &&\
-        aws eks get-token --cluster-name main --region eu-central-1 &&\
         terraform plan -input=false -lock=false
