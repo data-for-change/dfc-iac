@@ -11,6 +11,7 @@ Prerequisites:
 
 * Python3
 * [vault binary](https://www.vaultproject.io/downloads)
+* Prerequisites for [dfc-k8s cluster connect](https://github.com/data-for-change/dfc-k8s/blob/main/docs/Cluster%20Connect.md)
 
 Set vault credentials:
 
