@@ -77,3 +77,11 @@ resource "aws_route53_record" "oway_org_il_root" {
   records = each.value.records
   ttl = "300"
 }
+
+output "anyway_co_il_ns_servers" {
+  value = data.aws_route53_zone.anyway_co_il.name_servers
+}
+
+output "oway_org_il_ns_servers" {
+  value = data.aws_route53_zone.oway_org_il.name_servers
+}
