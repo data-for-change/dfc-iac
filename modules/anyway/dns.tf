@@ -1,6 +1,5 @@
 locals {
-  k8s_dns_record = {type="CNAME", records=["ingress.hasadna.org.il"]}
-  k8s_root_dns_record = {type="A", records=["212.80.204.81"]}
+  k8s_dns_record = {type="CNAME", records=[var.dfc_k8s_main_ingress_hostname]}
   anyway_co_il_dns_records = {
     "airflow-data" = local.k8s_dns_record
     "airflow" = local.k8s_dns_record
@@ -18,17 +17,11 @@ locals {
     "stage" = {type="A", records=["51.15.72.252"]}
     "test" = {type="A", records=["35.233.114.242"]}
   }
-  anyway_co_il_root_dns_records = {
-    a = local.k8s_root_dns_record
-  }
   oway_org_il_dns_records = {
     "stage" = {type="A", records=["138.68.112.226"]}
     "_446df89db6d3ca8ba6db1eff181484f9" = {type="CNAME", records=["_35e303c2df2669ca435b8b6770864a15.dhzvlrndnj.acm-validations.aws"]}
     "email" = {type="CNAME", records=["mailgun.org"]}
     "www" = local.k8s_dns_record
-  }
-  oway_org_il_root_dns_records = {
-    a = local.k8s_root_dns_record
   }
 }
 
@@ -52,12 +45,14 @@ resource "aws_route53_record" "anyway_co_il" {
 }
 
 resource "aws_route53_record" "anyway_co_il_root" {
-  for_each = local.anyway_co_il_root_dns_records
   zone_id = data.aws_route53_zone.anyway_co_il.zone_id
-  type = each.value.type
-  name = "${data.aws_route53_zone.anyway_co_il.name}"
-  records = each.value.records
-  ttl = "300"
+  name = data.aws_route53_zone.anyway_co_il.name
+  type = "A"
+  alias {
+    name                   = var.dfc_aws_lb_k8s_main_ingress.name
+    zone_id                = var.dfc_aws_lb_k8s_main_ingress.zone_id
+    evaluate_target_health = true
+  }
 }
 
 resource "aws_route53_record" "oway_org_il" {
@@ -70,12 +65,14 @@ resource "aws_route53_record" "oway_org_il" {
 }
 
 resource "aws_route53_record" "oway_org_il_root" {
-  for_each = local.oway_org_il_root_dns_records
   zone_id = data.aws_route53_zone.oway_org_il.zone_id
-  type = each.value.type
-  name = "${data.aws_route53_zone.oway_org_il.name}"
-  records = each.value.records
-  ttl = "300"
+  name = data.aws_route53_zone.oway_org_il.name
+  type = "A"
+  alias {
+    name                   = var.dfc_aws_lb_k8s_main_ingress.name
+    zone_id                = var.dfc_aws_lb_k8s_main_ingress.zone_id
+    evaluate_target_health = true
+  }
 }
 
 output "anyway_co_il_ns_servers" {
