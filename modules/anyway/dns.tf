@@ -49,7 +49,7 @@ resource "aws_route53_record" "anyway_co_il_root" {
   name = data.aws_route53_zone.anyway_co_il.name
   type = "A"
   alias {
-    name                   = var.dfc_aws_lb_k8s_main_ingress.name
+    name                   = var.dfc_aws_lb_k8s_main_ingress.dns_name
     zone_id                = var.dfc_aws_lb_k8s_main_ingress.zone_id
     evaluate_target_health = true
   }
@@ -69,7 +69,7 @@ resource "aws_route53_record" "oway_org_il_root" {
   name = data.aws_route53_zone.oway_org_il.name
   type = "A"
   alias {
-    name                   = var.dfc_aws_lb_k8s_main_ingress.name
+    name                   = var.dfc_aws_lb_k8s_main_ingress.dns_name
     zone_id                = var.dfc_aws_lb_k8s_main_ingress.zone_id
     evaluate_target_health = true
   }
