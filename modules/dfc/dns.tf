@@ -4,6 +4,7 @@ locals {
     "argocd-grpc",
     "grafana",
     "vault",
+    "redash",
   ]
 }
 
