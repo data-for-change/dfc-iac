@@ -5,6 +5,7 @@ locals {
     "grafana",
     "vault",
     "redash",
+    "selenium"
   ]
 }
 
