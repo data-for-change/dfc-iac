@@ -75,11 +75,13 @@ services:
       ANYWAY_ETL_USE_LATEST_TAG: "yes"
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
       AIRFLOW__WEBSERVER__BASE_URL: https://airflow.anyway.co.il
+      ANYWAY_MAIN_CONTAINER_NAME: anyway-anyway-main-1
     env_file:
       - ./secrets/airflow-scheduler.env
     volumes:
       - /data/anyway/airflow-home-data:/var/airflow
       - /data/anyway/airflow-etl-data:/var/anyway-etl-data
+      - /var/run/docker.sock:/var/run/docker.sock
     networks: [dfc]
 
   airflow-nginx:

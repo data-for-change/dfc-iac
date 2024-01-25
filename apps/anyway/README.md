@@ -7,8 +7,6 @@ https://docs.google.com/presentation/d/1bXkcCgsXUr1FQA7hCZdb5_m7IXIiP1UixuOHuV88
 ![](image.png)
 
 ### TODO: db-backup-cronjob
-### TODO: ingresses
-### TODO: airflow execute via kubectl exec - modify to execute in docker compose
 
 ## Enable DB Redash read-only user
 
