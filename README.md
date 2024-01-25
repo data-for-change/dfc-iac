@@ -3,12 +3,7 @@
 ## Prerequisites
 
 * Python 3
-* AWS CLI
-* Vault CLI
-* Terraform CLI
-* Env vars:
-  * `VAULT_ADDR`
-  * `VAULT_TOKEN`
+* [Vault CLI](https://developer.hashicorp.com/vault/downloads)
 
 Install Python Dependencies:
 
@@ -16,43 +11,54 @@ Install Python Dependencies:
 python3 -m pip install -r requirements.txt
 ```
 
+Create a directory for secret files:
+
+```
+sudo mkdir -p /etc/dfc
+sudo chown $USER -R /etc/dfc
+```
+
 ## Apps
 
-Apps are deployed from `apps/` directory using docker compose.
+The apps are defined using Docker Compose with some additional configurations under `apps/`
 
-### Deploy
+Anyway app is continuously deployed on any change to `apps/anyway`, the other apps need to be deployed manually.
 
-```
-bin/apps.py deploy_app APP_NAME
-```
-
-### Docker Compose Management
+To manage the apps you need to get a Vault TOKEN, access vault at https://vault.dataforchange.gov.il and login.
+Once logged-in, click on your name in the top right corner and select "Copy token".
+Set the Token in an env var:
 
 ```
+export VAULT_TOKEN=<paste token here>
+```
+
+You might need to get a new token occasionally, if you get an error message about an invalid token, just repeat the above steps.
+
+Now you can run the apps management script to manage the apps, following are some examples:
+
+```
+# Run Docker Compose commands
 bin/apps.py compose APP_NAME COMMAND
-```
-
-for example:
-
-```
+# for example:
 bin/apps.py compose anyway ps
-bin/apps.py compose anyway logs -f
 bin/apps.py compose anyway logs -f anyway-main
-```
 
-### Server Management
-
-SSH to the server:
-
-```
+# SSH to the server
 bin/apps.py ssh
+
+# Run a command on the server
 bin/apps.py ssh docker ps
+
+# Deploy an app
+bin/apps.py deploy_app APP_NAME
 ```
 
 ## Terraform
 
-Every commit to the repo will run terraform plan in GitHub actions, you can check the actions log for details.
-To prevent destructive actions, apply the changes you have to run locally as described below.
+Prerequisites:
+
+* [Terraform CLI](https://www.terraform.io/downloads.html)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 
 ### Running locally
 

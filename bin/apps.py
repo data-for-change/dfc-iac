@@ -3,21 +3,26 @@ import os
 import sys
 import json
 import subprocess
-import tempfile
-
 from ruamel import yaml
 from functools import lru_cache
 from tempfile import TemporaryDirectory
 
 
+VAULT_ADDR = os.environ.get('VAULT_ADDR', 'https://vault.dataforchange.org.il')
+VAULT_TOKEN = os.environ.get('VAULT_TOKEN')
 ETC_DFC_DOCKER = '/etc/dfc/docker' if os.environ.get("CI") != "true" else '/tmp/dfc/docker'
 
 
 @lru_cache()
 def get_vault_kv_path(path):
+    assert VAULT_TOKEN, "VAULT_TOKEN env var is required, see README for how to get it"
     return json.loads(subprocess.check_output([
         'vault', 'kv', 'get', '-format=json', f'kv/{path}'
-    ]))['data']['data']
+    ], env={
+        **os.environ,
+        'VAULT_ADDR': VAULT_ADDR,
+        'VAULT_TOKEN': VAULT_TOKEN,
+    }))['data']['data']
 
 
 def ssh_init():

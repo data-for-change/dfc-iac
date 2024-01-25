@@ -64,8 +64,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.redash-nginx.loadbalancer.server.port=80"
       - "traefik.http.routers.redash-nginx.rule=Host(`redash.dataforchange.org.il`)"
-      # - "traefik.http.routers.anyway-reports.tls=true"
-      # - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
+      - "traefik.http.routers.redash-nginx.tls=true"
+      - "traefik.http.routers.redash-nginx.tls.certresolver=dfc"
     # pulled Nov 1, 2021
     image: redash/nginx:latest@sha256:4eaaa7af6476b0422058b0022661ad6129dfbf9065c506fb0904bbf0a16f2007
     restart: unless-stopped
