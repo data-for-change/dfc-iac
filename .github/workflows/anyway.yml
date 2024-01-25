@@ -24,5 +24,5 @@ jobs:
         uci vault install --version $VAULT_CLI_VERSION &&\
         pip install -r requirements.txt &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
-        bin/apps.py deploy_app anyway
-
+        bin/apps.py deploy_app anyway &&\
+        bin/apps.py compose anyway ps
