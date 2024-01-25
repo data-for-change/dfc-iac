@@ -23,7 +23,7 @@ def ssh_init():
         data = get_vault_kv_path('projects/iac/docker-server')
         hostname = data['hostname']
         id_ed25519 = data['id_ed25519']
-        os.makedirs('/etc/dfc/docker', exist_ok=True)
+        os.makedirs(ETC_DFC_DOCKER, exist_ok=True)
         with open(f'{ETC_DFC_DOCKER}/hostname', 'w') as f:
             f.write(hostname)
         with open(f'{ETC_DFC_DOCKER}/id_ed25519', 'w') as f:
