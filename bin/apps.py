@@ -8,6 +8,9 @@ from functools import lru_cache
 from tempfile import TemporaryDirectory
 
 
+ETC_DFC_DOCKER = '/etc/dfc/docker' if os.environ.get("CI") != "true" else '/tmp/dfc/docker'
+
+
 @lru_cache()
 def get_vault_kv_path(path):
     return json.loads(subprocess.check_output([
@@ -16,17 +19,17 @@ def get_vault_kv_path(path):
 
 
 def ssh_init():
-    if not os.path.exists('/etc/dfc/docker/id_ed25519') or not os.path.exists('/etc/dfc/docker/hostname'):
+    if not os.path.exists(f'{ETC_DFC_DOCKER}/id_ed25519') or not os.path.exists(f'{ETC_DFC_DOCKER}/hostname'):
         data = get_vault_kv_path('projects/iac/docker-server')
         hostname = data['hostname']
         id_ed25519 = data['id_ed25519']
         os.makedirs('/etc/dfc/docker', exist_ok=True)
-        with open('/etc/dfc/docker/hostname', 'w') as f:
+        with open(f'{ETC_DFC_DOCKER}/hostname', 'w') as f:
             f.write(hostname)
-        with open('/etc/dfc/docker/id_ed25519', 'w') as f:
+        with open(f'{ETC_DFC_DOCKER}/id_ed25519', 'w') as f:
             f.write(id_ed25519)
     else:
-        with open('/etc/dfc/docker/hostname') as f:
+        with open(f'{ETC_DFC_DOCKER}/hostname') as f:
             hostname = f.read().strip()
     return hostname
 
@@ -35,7 +38,7 @@ def ssh(*args, check_output=False):
     hostname = ssh_init()
     cmd = [
         'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR',
-        '-i', '/etc/dfc/docker/id_ed25519', f'ubuntu@{hostname}', *args
+        '-i', f'{ETC_DFC_DOCKER}/id_ed25519', f'ubuntu@{hostname}', *args
     ]
     if check_output:
         return subprocess.check_output(cmd).decode('utf-8')
@@ -84,7 +87,7 @@ def scp(src, dst, stats=None):
     hostname = ssh_init()
     subprocess.check_call([
         'scp', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR',
-        '-i', '/etc/dfc/docker/id_ed25519', src, f'ubuntu@{hostname}:{dst}'
+        '-i', f'{ETC_DFC_DOCKER}/id_ed25519', src, f'ubuntu@{hostname}:{dst}'
     ])
 
 
