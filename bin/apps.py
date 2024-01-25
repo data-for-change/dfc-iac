@@ -38,7 +38,7 @@ def ssh_init():
 def ssh(*args, check_output=False):
     hostname = ssh_init()
     cmd = [
-        'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR',
+        'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR', '-o', 'IdentitiesOnly=yes',
         '-i', f'{ETC_DFC_DOCKER}/id_ed25519', f'ubuntu@{hostname}', *args
     ]
     if check_output:
@@ -87,7 +87,7 @@ def scp(src, dst, stats=None):
         stats['all_changed_files'].add(dst)
     hostname = ssh_init()
     subprocess.check_call([
-        'scp', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR',
+        'scp', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR', '-o', 'IdentitiesOnly=yes',
         '-i', f'{ETC_DFC_DOCKER}/id_ed25519', src, f'ubuntu@{hostname}:{dst}'
     ])
 
