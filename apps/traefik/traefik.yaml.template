@@ -1,0 +1,22 @@
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    directory: /etc/traefik/dynamic_conf
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+log:
+  level: INFO
+
+certificatesResolvers:
+  dfc:
+    acme:
+      email: "~ACME_EMAIL~"
+      storage: /etc/traefik/acme/acme.json
+      httpChallenge:
+        entryPoint: web

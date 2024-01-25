@@ -1,0 +1,34 @@
+services:
+  terraform-state-db:
+    image: postgres:14@sha256:b0ee049a2e347f5ec8c64ad225c7edbc88510a9e34450f23c4079a489ce16268
+    restart: unless-stopped
+    command: [
+      -c, "ssl_cert_file=/opt/secured_ssl/server.crt",
+      -c, "ssl_key_file=/opt/secured_ssl/server.key",
+      -c, "ssl=on"
+    ]
+    env_file:
+      - ./secrets/terraform-state-db.env
+    volumes:
+      - ./secrets/state_db_server.crt:/opt/secured_ssl/server.crt:ro
+      - ./secrets/state_db_server.key:/opt/secured_ssl/server.key:ro
+      - /data/terraform-state-db/terraform_state_db_postgres:/var/lib/postgresql/data
+    networks: [dfc]
+    ports:
+      - "9001:5432"
+
+networks:
+  dfc:
+    external: true
+
+x-pre-deploy:
+  - sudo chown 999:999 secrets/state_db_server.*
+  - sudo chmod 400 secrets/state_db_server.*
+
+x-secrets:
+  files:
+    state_db_server.crt: "vault:projects/iac/terraform:state_db_server.crt"
+    state_db_server.key: "vault:projects/iac/terraform:state_db_server.key"
+  env_files:
+    terraform-state-db:
+      POSTGRES_PASSWORD: "vault:projects/iac/terraform:backend-db-password"

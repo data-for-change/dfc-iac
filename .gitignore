@@ -2,6 +2,7 @@
 .terraform.lock.hcl
 .idea
 .kubeconfig
-.env
+/.env
 .approle-*
 venv
+secrets

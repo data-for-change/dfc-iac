@@ -1,0 +1,214 @@
+x-anyway-command: &x-anyway-command
+  ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "-t", "120", "anyway:app"]
+
+x-anyway-environment: &x-anyway-environment
+  PROXYFIX_X_FOR: "1"
+  PROXYFIX_X_PROTO: "1"
+  PROXYFIX_X_HOST: "1"
+  GOOGLE_APPLICATION_CREDENTIALS: "/secrets/GOOGLE_APPLICATION_CREDENTIALS_KEY.json"
+
+x-anyway: &x-anyway
+  image: ${ANYWAY_IMAGE:-ghcr.io/data-for-change/anyway/anyway:latest}
+  env_file:
+    - ./secrets/anyway.env
+    - ./secrets/anyway-db.env
+  volumes:
+    - ./secrets/GOOGLE_APPLICATION_CREDENTIALS_KEY.json:/secrets/GOOGLE_APPLICATION_CREDENTIALS_KEY.json:ro
+  restart: unless-stopped
+  networks: [dfc]
+
+services:
+  anyway-main:
+    <<: *x-anyway
+    command: *x-anyway-command
+    environment: *x-anyway-environment
+    depends_on:
+      - db
+
+  anyway-secondary:
+    <<: *x-anyway
+    entrypoint: *x-anyway-command
+    environment:
+      <<: *x-anyway-environment
+      ALLOW_ALEMBIC_UPGRADE: "no"
+    depends_on:
+      - anyway-main
+    networks: [dfc]
+    # we route all external traffic to the secondary container, to keep the main container free for airflow tasks
+    hostname: anyway
+
+  db:
+    hostname: anyway-db
+    image: ${PIN_DB_IMAGE:-ghcr.io/hasadna/anyway/db:latest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      # DBRESTORE_AWS_BUCKET: dfc-anyway-full-db-dumps
+      # DBRESTORE_FILE_NAME: 2024-01-24_anyway.pgdump
+    env_file:
+      - ./secrets/db.env
+    volumes:
+      - /data/anyway/db/dbdata:/var/lib/postgresql/data
+    tmpfs:
+      - /dev/shm:size=1024m
+    networks: [dfc]
+    ports:
+      - "9002:5432"
+
+  airflow-db:
+    image: postgres:13@sha256:6647385dd9ae11aa2216bf55c54d126b0a85637b3cf4039ef24e3234113588e3
+    restart: unless-stopped
+    env_file:
+      - ./secrets/airflow-db.env
+    volumes:
+      - /data/anyway/airflow-db/airflow_db:/var/lib/postgresql/data
+    networks: [dfc]
+
+  airflow-scheduler:
+    image: ${AIRFLOW_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-airflow:latest}
+    restart: unless-stopped
+    environment:
+      ANYWAY_ETL_AIRFLOW_ROLE: "scheduler"
+      ANYWAY_ETL_AIRFLOW_PIP_INSTALL_DEPS: "yes"
+      ANYWAY_ETL_BRANCH: ""
+      ANYWAY_ETL_USE_LATEST_TAG: "yes"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__WEBSERVER__BASE_URL: https://airflow.anyway.co.il
+    env_file:
+      - ./secrets/airflow-scheduler.env
+    volumes:
+      - /data/anyway/airflow-home-data:/var/airflow
+      - /data/anyway/airflow-etl-data:/var/anyway-etl-data
+    networks: [dfc]
+
+  airflow-nginx:
+    image: ${ETL_NGINX_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-nginx:latest}
+    restart: unless-stopped
+    volumes:
+      - /data/anyway/airflow-etl-data:/var/anyway-etl-data
+    networks: [dfc]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.airflow-nginx.loadbalancer.server.port=80"
+      - "traefik.http.routers.airflow-nginx.rule=Host(`airflow-data.anyway.co.il`)"
+      # - "traefik.http.routers.airflow-nginx.tls=true"
+      # - "traefik.http.routers.airflow-nginx.tls.certresolver=dfc"
+
+  airflow-webserver:
+    image: ${AIRFLOW_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-airflow:latest}
+    restart: unless-stopped
+    environment:
+      ANYWAY_ETL_AIRFLOW_INITIALIZE: "yes"
+      ANYWAY_ETL_AIRFLOW_ROLE: "webserver"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+    env_file:
+      - ./secrets/airflow-webserver.env
+    volumes:
+      - /data/anyway/airflow-home-data:/var/airflow
+    networks: [dfc]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.airflow-webserver.loadbalancer.server.port=8080"
+      - "traefik.http.routers.airflow-webserver.rule=Host(`airflow.anyway.co.il`)"
+      # - "traefik.http.routers.airflow-webserver.tls=true"
+      # - "traefik.http.routers.airflow-webserver.tls.certresolver=dfc"
+
+  reports:
+    hostname: anyway-reports
+    image: ${REPORTS_IMAGE:-ghcr.io/data-for-change/anyway-reports/anyway-reports:latest}
+    restart: unless-stopped
+    networks: [dfc]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.anyway-reports.loadbalancer.server.port=80"
+      - "traefik.http.routers.anyway-reports.rule=Host(`reports.anyway.co.il`)"
+      # - "traefik.http.routers.anyway-reports.tls=true"
+      # - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
+
+  nginx:
+    hostname: anyway-nginx
+    image: ${NGINX_IMAGE:-ghcr.io/data-for-change/anyway/nginx:latest}
+    restart: unless-stopped
+    volumes:
+      - ./nginx_anyway_proxy.conf:/etc/nginx/anyway_proxy.conf:ro
+    networks: [dfc]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.anyway-nginx.loadbalancer.server.port=80"
+      - "traefik.http.routers.anyway-nginx.rule=Host(`www.anyway.co.il`)"
+      # - "traefik.http.routers.anyway-nginx.tls=true"
+      # - "traefik.http.routers.anyway-nginx.tls.certresolver=dfc"
+
+networks:
+  dfc:
+    external: true
+
+x-on-file-change:
+  - secrets/GOOGLE_APPLICATION_CREDENTIALS_KEY.json: docker compose restart anyway-main anyway-secondary
+  - nginx_anyway_proxy.conf: docker compose restart nginx
+
+x-files:
+  nginx_anyway_proxy.conf: {}
+  .env: {}
+
+x-secrets:
+  files:
+    GOOGLE_APPLICATION_CREDENTIALS_KEY.json: "vault:projects/anyway/prod/k8s-secret-anyway:GOOGLE_APPLICATION_CREDENTIALS_KEY.json"
+
+  env_files:
+    airflow-db:
+      POSTGRES_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_DB_POSTGRES_PASSWORD"
+    airflow-scheduler:
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_SQLALCHEMY_URL"
+      SQLALCHEMY_URL: "vault:projects/anyway/prod/k8s-secret-anyway-db:DATABASE_URL"
+      IMAP_MAIL_USER: "vault:projects/anyway/prod/k8s-secret-anyway:MAILUSER"
+      IMAP_MAIL_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:MAILPASS"
+      AIRFLOW__EMAIL__EMAIL_BACKEND: "airflow.utils.email.send_email_smtp"
+      AIRFLOW__SMTP__SMTP_HOST: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_HOST"
+      AIRFLOW__SMTP__SMTP_PORT: "2525"
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: "Airflow <airflow@anyway.co.il>"
+      AIRFLOW__SMTP__SMTP_USER: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_USER"
+      AIRFLOW__SMTP__SMTP_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_PASSWORD"
+      ANYWAY_ETL_ALERT_EMAILS: "vault:projects/anyway/prod/k8s-secret-anyway:ANYWAY_ETL_ALERT_EMAILS"
+    airflow-webserver:
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_SQLALCHEMY_URL"
+      ANYWAY_ETL_AIRFLOW_ADMIN_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_ADMIN_PASSWORD"
+    anyway:
+      AIRFLOW_ADMIN_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_ADMIN_PASSWORD"
+      AIRFLOW_DB_POSTGRES_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_DB_POSTGRES_PASSWORD"
+      AIRFLOW_SQLALCHEMY_URL: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_SQLALCHEMY_URL"
+      AIRFLOW__SMTP__SMTP_HOST: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_HOST"
+      AIRFLOW__SMTP__SMTP_PORT: "2525"
+      AIRFLOW__SMTP__SMTP_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_PASSWORD"
+      AIRFLOW__SMTP__SMTP_USER: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW__SMTP__SMTP_USER"
+      ANYWAY_ETL_ALERT_EMAILS: "vault:projects/anyway/prod/k8s-secret-anyway:ANYWAY_ETL_ALERT_EMAILS"
+      APP_SECRET_KEY: "vault:projects/anyway/prod/k8s-secret-anyway:APP_SECRET_KEY"
+      AWS_ACCESS_KEY: "vault:projects/anyway/prod/aws_prod_app_user:access_key_id"
+      AWS_SECRET_KEY: "vault:projects/anyway/prod/aws_prod_app_user:secret_access_key"
+      FACEBOOK_KEY: "vault:projects/anyway/prod/k8s-secret-anyway:FACEBOOK_KEY"
+      FACEBOOK_SECRET: "vault:projects/anyway/prod/k8s-secret-anyway:FACEBOOK_SECRET"
+      FLASK_ENV: "vault:projects/anyway/prod/k8s-secret-anyway:FLASK_ENV"
+      GOOGLE_LOGIN_CLIENT_ID: "vault:projects/anyway/prod/k8s-secret-anyway:GOOGLE_LOGIN_CLIENT_ID"
+      GOOGLE_LOGIN_CLIENT_SECRET: "vault:projects/anyway/prod/k8s-secret-anyway:GOOGLE_LOGIN_CLIENT_SECRET"
+      GOOGLE_MAPS_KEY: "vault:projects/anyway/prod/k8s-secret-anyway:GOOGLE_MAPS_KEY"
+      MAILPASS: "vault:projects/anyway/prod/k8s-secret-anyway:MAILPASS"
+      MAILUSER: "vault:projects/anyway/prod/k8s-secret-anyway:MAILUSER"
+      SERVER_ENV: "vault:projects/anyway/prod/k8s-secret-anyway:SERVER_ENV"
+      SLACK_WEBHOOK_URL: "vault:projects/anyway/prod/k8s-secret-anyway:SLACK_WEBHOOK_URL"
+      TWITTER_ACCESS_KEY: "vault:projects/anyway/prod/k8s-secret-anyway:TWITTER_ACCESS_KEY"
+      TWITTER_ACCESS_SECRET: "vault:projects/anyway/prod/k8s-secret-anyway:TWITTER_ACCESS_SECRET"
+      TWITTER_CONSUMER_KEY: "vault:projects/anyway/prod/k8s-secret-anyway:TWITTER_CONSUMER_KEY"
+      TWITTER_CONSUMER_SECRET: "vault:projects/anyway/prod/k8s-secret-anyway:TWITTER_CONSUMER_SECRET"
+      SELENIUM_URL: "vault:projects/anyway/prod/k8s-secret-anyway:SELENIUM_URL"
+      BOT_TOKEN: "vault:projects/anyway/prod/k8s-secret-anyway:BOT_TOKEN"
+      AIRFLOW_USER: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_USER"
+      AIRFLOW_PASSWORD: "vault:projects/anyway/prod/k8s-secret-anyway:AIRFLOW_PASSWORD"
+    anyway-db:
+      DATABASE_URL: "vault:projects/anyway/prod/k8s-secret-anyway-db:DATABASE_URL"
+    db:
+      DBRESTORE_AWS_ACCESS_KEY_ID: "vault:projects/anyway/prod/aws_db_dumps_reader_user:access_key_id"
+      DBRESTORE_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/prod/aws_db_dumps_reader_user:secret_access_key"
+      DBRESTORE_SET_ANYWAY_PASSWORD: "vault:projects/anyway/prod/k8s-secret-db:DBRESTORE_SET_ANYWAY_PASSWORD"
+      POSTGRES_PASSWORD: "vault:projects/anyway/prod/k8s-secret-db:POSTGRES_PASSWORD"

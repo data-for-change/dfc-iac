@@ -1,0 +1,50 @@
+services:
+  # TODO: add cronjob to restart it every day
+  selenium-chrome-node:
+    networks: [dfc]
+    image: selenium/node-chrome:4.8.3-20230403
+    environment:
+      SE_EVENT_BUS_HOST: "selenium-hub"
+      SE_EVENT_BUS_PUBLISH_PORT: "4442"
+      SE_EVENT_BUS_SUBSCRIBE_PORT: "4443"
+    tmpfs:
+      - /dev/shm:size=1024m
+    volumes:
+      # TODO: clear this directory daily + set permissions - see k8s template
+      - /tmp/selenium-tempdata:/var/selenium/tempdata
+
+  selenium-chrome-node-nginx:
+    networks: [dfc]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.selenium-chrome-node-nginx.loadbalancer.server.port=80"
+      - "traefik.http.routers.selenium-chrome-node-nginx.rule=Host(`selenium.dataforchange.org.il`)"
+      - "traefik.http.routers.selenium-chrome-node-nginx.tls=true"
+      - "traefik.http.routers.selenium-chrome-node-nginx.tls.certresolver=dfc"
+    image: nginx@sha256:63b44e8ddb83d5dd8020327c1f40436e37a6fffd3ef2498a6204df23be6e7e94
+    volumes:
+      - /tmp/selenium-tempdata:/var/selenium/tempdata
+      - ./nginx-default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./setuser.sh:/docker-entrypoint.d/99-setuser.sh:ro
+
+  selenium-hub:
+    networks: [dfc]
+    image: selenium/hub:4.8.3-20230403
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.selenium-hub.loadbalancer.server.port=4444"
+      - "traefik.http.routers.selenium-hub.rule=Host(`selenium-hub.dataforchange.org.il`)"
+      - "traefik.http.routers.selenium-hub.tls=true"
+      - "traefik.http.routers.selenium-hub.tls.certresolver=dfc"
+
+networks:
+  dfc:
+    external: true
+
+x-on-file-change:
+  - "nginx-default.conf": docker compose restart selenium-chrome-node-nginx
+  - "setuser.sh": docker compose restart selenium-chrome-node-nginx
+
+x-files:
+  nginx-default.conf: {}
+  setuser.sh: {}

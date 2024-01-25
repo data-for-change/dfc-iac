@@ -1,0 +1,29 @@
+services:
+  traefik:
+    image: traefik:v2.10.7@sha256:c5181ddf303f1ccfd4bd6d1d9c4867b0500efb6089a0f9ccb16612438f6e934f
+    restart: unless-stopped
+    volumes:
+      - ./secrets/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /data/traefik/acme:/etc/traefik/acme
+      - ./dynamic_conf:/etc/traefik/dynamic_conf
+    networks: [dfc]
+    ports:
+      - "80:80"
+      - "443:443"
+
+networks:
+  dfc:
+    external: true
+
+x-on-file-change:
+  - docker compose restart traefik
+
+x-files:
+  dynamic_conf/anyway_redirects.yaml: {}
+
+x-secrets:
+  files:
+    traefik.yaml:
+      values:
+        ACME_EMAIL: "vault:projects/iac/letsencrypt:acme_email"
