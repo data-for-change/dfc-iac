@@ -19,7 +19,7 @@ def main(images):
         if line:
             key = line.split('=')[0]
             if key in KEYS_MAP and KEYS_MAP[key] in images:
-                line = '{}={}'.format(key, images[KEYS_MAP[key]])
+                line = '{}={}'.format(key, images[KEYS_MAP[key]]).replace('docker.pkg.github.com', 'ghcr.io')
             new_lines.append(line)
     with open('apps/anyway/.env', 'w') as f:
         f.write('\n'.join(new_lines))
