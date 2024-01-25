@@ -6,8 +6,6 @@ https://docs.google.com/presentation/d/1bXkcCgsXUr1FQA7hCZdb5_m7IXIiP1UixuOHuV88
 
 ![](image.png)
 
-### TODO: db-backup-cronjob
-
 ## Enable DB Redash read-only user
 
 Start a shell on DB container and run the following to start an sql session:

@@ -3,6 +3,7 @@ services:
   selenium-chrome-node:
     networks: [dfc]
     image: selenium/node-chrome:4.8.3-20230403
+    restart: unless-stopped
     environment:
       SE_EVENT_BUS_HOST: "selenium-hub"
       SE_EVENT_BUS_PUBLISH_PORT: "4442"
@@ -22,6 +23,7 @@ services:
       - "traefik.http.routers.selenium-chrome-node-nginx.tls=true"
       - "traefik.http.routers.selenium-chrome-node-nginx.tls.certresolver=dfc"
     image: nginx@sha256:63b44e8ddb83d5dd8020327c1f40436e37a6fffd3ef2498a6204df23be6e7e94
+    restart: unless-stopped
     volumes:
       - /tmp/selenium-tempdata:/var/selenium/tempdata
       - ./nginx-default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -30,6 +32,7 @@ services:
   selenium-hub:
     networks: [dfc]
     image: selenium/hub:4.8.3-20230403
+    restart: unless-stopped
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.selenium-hub.loadbalancer.server.port=4444"

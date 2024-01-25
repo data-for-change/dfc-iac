@@ -68,6 +68,8 @@ services:
   airflow-scheduler:
     image: ${AIRFLOW_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-airflow:latest}
     restart: unless-stopped
+    depends_on:
+      - airflow-db
     environment:
       ANYWAY_ETL_AIRFLOW_ROLE: "scheduler"
       ANYWAY_ETL_AIRFLOW_PIP_INSTALL_DEPS: "yes"
@@ -85,6 +87,8 @@ services:
     networks: [dfc]
 
   airflow-nginx:
+    depends_on:
+      - airflow-webserver
     image: ${ETL_NGINX_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-nginx:latest}
     restart: unless-stopped
     volumes:
@@ -98,6 +102,8 @@ services:
       # - "traefik.http.routers.airflow-nginx.tls.certresolver=dfc"
 
   airflow-webserver:
+    depends_on:
+      - airflow-scheduler
     image: ${AIRFLOW_IMAGE:-ghcr.io/data-for-change/anyway-etl/anyway-etl-airflow:latest}
     restart: unless-stopped
     environment:
@@ -130,6 +136,8 @@ services:
       # - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
 
   nginx:
+    depends_on:
+      - anyway-secondary
     hostname: anyway-nginx
     image: ${NGINX_IMAGE:-ghcr.io/data-for-change/anyway/nginx:latest}
     restart: unless-stopped
@@ -142,6 +150,20 @@ services:
       - "traefik.http.routers.anyway-nginx.rule=Host(`www.anyway.co.il`)"
       # - "traefik.http.routers.anyway-nginx.tls=true"
       # - "traefik.http.routers.anyway-nginx.tls.certresolver=dfc"
+
+  db-backup-cronjob:
+    x-cronjob:
+      schedule: "10 0 * * *"
+    networks: [dfc]
+    image: ${PIN_DB_BACKUP_IMAGE:-ghcr.io/hasadna/anyway/db_backup:latest}
+    environment:
+      DBDUMP_S3_FILE_PREFIX: "test-docker-migration"
+      DBDUMP_HOST: "anyway-db"
+      DBDUMP_USER: "postgres"
+      DBDUMP_FULL_BUCKET: "dfc-anyway-full-db-dumps"
+      DBDUMP_PARTIAL_BUCKET: "dfc-anyway-partial-db-dumps"
+    env_file:
+      - ./secrets/db-backup.env
 
 networks:
   dfc:
@@ -214,3 +236,7 @@ x-secrets:
       DBRESTORE_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/prod/aws_db_dumps_reader_user:secret_access_key"
       DBRESTORE_SET_ANYWAY_PASSWORD: "vault:projects/anyway/prod/k8s-secret-db:DBRESTORE_SET_ANYWAY_PASSWORD"
       POSTGRES_PASSWORD: "vault:projects/anyway/prod/k8s-secret-db:POSTGRES_PASSWORD"
+    db-backup:
+      DBDUMP_AWS_ACCESS_KEY_ID: "vault:projects/anyway/prod/aws_db_dumps_writer_user:access_key_id"
+      DBDUMP_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/prod/aws_db_dumps_writer_user:secret_access_key"
+      DBDUMP_PASSWORD: "vault:projects/anyway/prod/k8s-secret-db-backup:DBDUMP_PASSWORD"

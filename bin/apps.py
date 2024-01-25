@@ -3,6 +3,8 @@ import os
 import sys
 import json
 import subprocess
+import tempfile
+
 from ruamel import yaml
 from functools import lru_cache
 from tempfile import TemporaryDirectory
@@ -120,6 +122,16 @@ def copy_files(app_conf, app_name, stats):
         scp(f'apps/{app_name}/{src}', f'~/apps/.new.{app_name}/{dst}', stats)
 
 
+def deploy_cronjob(service_name, service, app_name):
+    print(f'Deploying cronjob {service_name}')
+    schedule = service['x-cronjob']['schedule']
+    cronline = f'{schedule} ubuntu cd ~/apps/{app_name} && docker compose run --rm {service_name}'
+    ssh(f'''
+        sudo rm -f /etc/cron.d/{app_name}-{service_name}
+        echo "{cronline}" | sudo tee /etc/cron.d/{app_name}-{service_name}
+    ''')
+
+
 def deploy_app(app_name, *args):
     skip_deploy = '--skip-deploy' in args
     assert os.path.exists(f'./apps/{app_name}/compose.yaml')
@@ -142,9 +154,15 @@ def deploy_app(app_name, *args):
         for line in app_conf.get('x-pre-deploy', []):
             print('Running x-pre-deploy:', line)
             ssh(f'cd ~/apps/{app_name} && {line}')
+        start_services = set()
+        for service_name, service in app_conf['services'].items():
+            if service.get('x-cronjob'):
+                deploy_cronjob(service_name, service, app_name)
+            else:
+                start_services.add(service_name)
         ssh(f'''
             cd ~/apps/{app_name}
-            docker compose up -d
+            docker compose up -d {' '.join(start_services)}
         ''')
         for on_file_change in app_conf.get('x-on-file-change', []):
             if not isinstance(on_file_change, dict):
