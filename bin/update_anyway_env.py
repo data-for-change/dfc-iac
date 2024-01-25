@@ -7,6 +7,8 @@ KEYS_MAP = {
     "ANYWAY_IMAGE": "image",
     "NGINX_IMAGE": "nginxImage",
     "REPORTS_IMAGE": "anywayReportsImage",
+    "ETL_NGINX_IMAGE": "etlNginxImage",
+    "AIRFLOW_IMAGE": "airflowImage",
 }
 
 
