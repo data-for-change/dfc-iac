@@ -6,6 +6,7 @@ import json
 KEYS_MAP = {
     "ANYWAY_IMAGE": "image",
     "NGINX_IMAGE": "nginxImage",
+    "REPORTS_IMAGE": "anywayReportsImage",
 }
 
 
