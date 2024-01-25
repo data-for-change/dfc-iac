@@ -28,6 +28,7 @@ def ssh_init():
             f.write(hostname)
         with open(f'{ETC_DFC_DOCKER}/id_ed25519', 'w') as f:
             f.write(id_ed25519)
+        subprocess.check_call(['chmod', '600', f'{ETC_DFC_DOCKER}/id_ed25519'])
     else:
         with open(f'{ETC_DFC_DOCKER}/hostname') as f:
             hostname = f.read().strip()
