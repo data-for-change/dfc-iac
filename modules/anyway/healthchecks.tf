@@ -12,10 +12,6 @@ locals {
       fqdn = aws_route53_record.anyway_co_il["airflow"].fqdn
       path = "/health"
     }
-    dev_airflow_anyway_co_il = {
-      fqdn = aws_route53_record.anyway_co_il["dev-airflow"].fqdn
-      path = "/health"
-    }
   }
 }
 

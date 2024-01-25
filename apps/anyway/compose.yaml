@@ -98,8 +98,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.airflow-nginx.loadbalancer.server.port=80"
       - "traefik.http.routers.airflow-nginx.rule=Host(`airflow-data.anyway.co.il`)"
-      # - "traefik.http.routers.airflow-nginx.tls=true"
-      # - "traefik.http.routers.airflow-nginx.tls.certresolver=dfc"
+      - "traefik.http.routers.airflow-nginx.tls=true"
+      - "traefik.http.routers.airflow-nginx.tls.certresolver=dfc"
 
   airflow-webserver:
     depends_on:
@@ -120,8 +120,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.airflow-webserver.loadbalancer.server.port=8080"
       - "traefik.http.routers.airflow-webserver.rule=Host(`airflow.anyway.co.il`)"
-      # - "traefik.http.routers.airflow-webserver.tls=true"
-      # - "traefik.http.routers.airflow-webserver.tls.certresolver=dfc"
+      - "traefik.http.routers.airflow-webserver.tls=true"
+      - "traefik.http.routers.airflow-webserver.tls.certresolver=dfc"
 
   reports:
     hostname: anyway-reports
@@ -132,8 +132,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.anyway-reports.loadbalancer.server.port=80"
       - "traefik.http.routers.anyway-reports.rule=Host(`reports.anyway.co.il`)"
-      # - "traefik.http.routers.anyway-reports.tls=true"
-      # - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
+      - "traefik.http.routers.anyway-reports.tls=true"
+      - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
 
   nginx:
     depends_on:
@@ -148,8 +148,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.anyway-nginx.loadbalancer.server.port=80"
       - "traefik.http.routers.anyway-nginx.rule=Host(`www.anyway.co.il`)"
-      # - "traefik.http.routers.anyway-nginx.tls=true"
-      # - "traefik.http.routers.anyway-nginx.tls.certresolver=dfc"
+      - "traefik.http.routers.anyway-nginx.tls=true"
+      - "traefik.http.routers.anyway-nginx.tls.certresolver=dfc"
 
   db-backup-cronjob:
     x-cronjob:

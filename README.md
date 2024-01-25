@@ -1,16 +1,11 @@
 # Data For Change Infrastructure As Code
 
-## Apps
-
-Apps are deployed from `apps/` directory using docker compose.
-
-### Install for local management
-
-Prerequisites:
+## Prerequisites
 
 * Python 3
 * AWS CLI
 * Vault CLI
+* Terraform CLI
 * Env vars:
   * `VAULT_ADDR`
   * `VAULT_TOKEN`
@@ -20,6 +15,10 @@ Install Python Dependencies:
 ```
 python3 -m pip install -r requirements.txt
 ```
+
+## Apps
+
+Apps are deployed from `apps/` directory using docker compose.
 
 ### Deploy
 
@@ -56,32 +55,6 @@ Every commit to the repo will run terraform plan in GitHub actions, you can chec
 To prevent destructive actions, apply the changes you have to run locally as described below.
 
 ### Running locally
-
-Prerequisites:
-
-* Python3
-* [vault binary](https://www.vaultproject.io/downloads)
-* Prerequisites for [dfc-k8s cluster connect](https://github.com/data-for-change/dfc-k8s/blob/main/docs/Cluster%20Connect.md)
-
-Install Python environment
-
-```
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-```
-
-Activate Python environment
-
-```
-. venv/bin/activate
-```
-
-Set vault credentials:
-
-```
-export VAULT_ADDR=
-export VAULT_TOKEN=
-```
 
 Initialize (should only be done once):
 
