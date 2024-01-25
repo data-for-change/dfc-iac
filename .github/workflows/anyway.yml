@@ -16,6 +16,7 @@ jobs:
         # python3 vault/create_approle.py terraform_readonly readonly
         VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
         VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+        CI: "true"
       run: |
         curl -s https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/65a0704332e63d51f63981dbb25cd83682dc4078/bin/github_actions_install.sh \
           | bash -s 4ed9d7055f0aa9629de1291fe0f42e154709b0b6 OriHoch/uumpa-ci-toolbox &&\
@@ -24,4 +25,3 @@ jobs:
         pip install -r requirements.txt &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
         bin/apps.py deploy_app anyway
-
