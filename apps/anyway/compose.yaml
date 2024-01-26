@@ -120,8 +120,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.airflow-webserver.loadbalancer.server.port=8080"
       - "traefik.http.routers.airflow-webserver.rule=Host(`airflow.anyway.co.il`)"
-      - "traefik.http.routers.airflow-webserver.tls=true"
-      - "traefik.http.routers.airflow-webserver.tls.certresolver=dfc"
 
   reports:
     hostname: anyway-reports
@@ -132,8 +130,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.anyway-reports.loadbalancer.server.port=80"
       - "traefik.http.routers.anyway-reports.rule=Host(`reports.anyway.co.il`)"
-      - "traefik.http.routers.anyway-reports.tls=true"
-      - "traefik.http.routers.anyway-reports.tls.certresolver=dfc"
 
   nginx:
     depends_on:

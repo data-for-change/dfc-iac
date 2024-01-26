@@ -20,8 +20,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.selenium-chrome-node-nginx.loadbalancer.server.port=80"
       - "traefik.http.routers.selenium-chrome-node-nginx.rule=Host(`selenium.dataforchange.org.il`)"
-      - "traefik.http.routers.selenium-chrome-node-nginx.tls=true"
-      - "traefik.http.routers.selenium-chrome-node-nginx.tls.certresolver=dfc"
+      - "traefik.http.routers.selenium-chrome-node-nginx.middlewares=selenium-auth@file"
     image: nginx@sha256:63b44e8ddb83d5dd8020327c1f40436e37a6fffd3ef2498a6204df23be6e7e94
     restart: unless-stopped
     volumes:
@@ -37,8 +36,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.selenium-hub.loadbalancer.server.port=4444"
       - "traefik.http.routers.selenium-hub.rule=Host(`selenium-hub.dataforchange.org.il`)"
-      - "traefik.http.routers.selenium-hub.tls=true"
-      - "traefik.http.routers.selenium-hub.tls.certresolver=dfc"
+      - "traefik.http.routers.selenium-hub.middlewares=selenium-auth@file"
 
 networks:
   dfc:

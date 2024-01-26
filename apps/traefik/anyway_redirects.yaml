@@ -1,12 +1,9 @@
 http:
   routers:
-    my-router:
+    anyway-redirects:
       rule: "Host(`anyway.co.il`, `www.oway.org.il`, `oway.org.il`)"
-      middlewares:
-        - redirect-to-anyway
+      middlewares: [redirect-to-anyway]
       service: dummy-service
-      tls:
-        certResolver: letsencrypt
 
   middlewares:
     redirect-to-anyway:

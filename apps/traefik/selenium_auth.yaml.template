@@ -1,0 +1,5 @@
+http:
+  middlewares:
+    selenium-auth:
+      basicAuth:
+        users: "~SELENIUM_USERNAME~:~SELENIUM_HASHED_PASSWORD~"

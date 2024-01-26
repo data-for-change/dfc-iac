@@ -16,14 +16,22 @@ networks:
   dfc:
     external: true
 
+x-pre-deploy:
+  - cp secrets/selenium_auth.yaml dynamic_conf/selenium_auth.yaml
+
 x-on-file-change:
   - docker compose restart traefik
 
 x-files:
-  dynamic_conf/anyway_redirects.yaml: {}
+  anyway_redirects.yaml:
+    target: dynamic_conf/anyway_redirects.yaml
 
 x-secrets:
   files:
     traefik.yaml:
       values:
         ACME_EMAIL: "vault:projects/iac/letsencrypt:acme_email"
+    selenium_auth.yaml:
+      values:
+        SELENIUM_USERNAME: "vault:projects/k8s/selenium/secrets:hub-username"
+        SELENIUM_HASHED_PASSWORD: "vault:projects/k8s/selenium/secrets:hub-password-htpasswd"
