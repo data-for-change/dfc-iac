@@ -5,6 +5,8 @@ http:
       middlewares:
         - redirect-to-anyway
       service: dummy-service
+      tls:
+        certResolver: letsencrypt
 
   middlewares:
     redirect-to-anyway:

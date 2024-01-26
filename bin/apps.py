@@ -45,7 +45,7 @@ def ssh_init():
 def ssh(*args, check_output=False):
     hostname = ssh_init()
     cmd = [
-        'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR', '-o', 'IdentitiesOnly=yes',
+        'ssh', '-t', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null', '-o', 'LogLevel=ERROR', '-o', 'IdentitiesOnly=yes',
         '-i', f'{ETC_DFC_DOCKER}/id_ed25519', f'ubuntu@{hostname}', *args
     ]
     if check_output:
