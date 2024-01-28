@@ -15,7 +15,7 @@ Create a directory for secret files:
 
 ```
 sudo mkdir -p /etc/dfc
-sudo chown $USER -R /etc/dfc
+sudo chown -R $USER /etc/dfc
 ```
 
 ## Apps
