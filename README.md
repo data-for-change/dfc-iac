@@ -24,7 +24,7 @@ The apps are defined using Docker Compose with some additional configurations un
 
 Anyway app is continuously deployed on any change to `apps/anyway`, the other apps need to be deployed manually.
 
-To manage the apps you need to get a Vault TOKEN, access vault at https://vault.dataforchange.gov.il and login.
+To manage the apps you need to get a Vault TOKEN, access vault at https://vault.dataforchange.org.il and login.
 Once logged-in, click on your name in the top right corner and select "Copy token".
 Set the Token in an env var:
 
