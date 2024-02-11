@@ -14,6 +14,23 @@ services:
       # TODO: clear this directory daily + set permissions - see k8s template
       - /tmp/selenium-tempdata:/var/selenium/tempdata
 
+  selenium-chrome-node-cleanup:
+    x-cronjob:
+      schedule: "10 1 * * *"
+    networks: [dfc]
+    image: docker:25@sha256:915cd1624f521b6337f135075f712c8fb14c0b151595c6144d7ce05d2f257869
+    entrypoint:
+      - sh
+      - -c
+      - |
+        docker stop selenium-selenium-chrome-node-1 selenium-selenium-chrome-node-nginx-1
+        rm -rf /var/selenium/tempdata/*
+        rm -rf /var/selenium/tempdata/.*
+        docker start selenium-selenium-chrome-node-1 selenium-selenium-chrome-node-nginx-1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/selenium-tempdata:/var/selenium/tempdata
+
   selenium-chrome-node-nginx:
     networks: [dfc]
     labels:
