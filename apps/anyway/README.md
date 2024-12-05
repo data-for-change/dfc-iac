@@ -15,7 +15,7 @@ su postgres
 psql anyway
 ```
 
-Run the following to create the readonly user (replace **** with real password):
+Run the following to create the readonly user and add a statement_timeout to the user queries (replace **** with real password):
 
 ```
 CREATE ROLE readonly;
@@ -23,6 +23,7 @@ GRANT CONNECT ON DATABASE anyway TO readonly;
 GRANT USAGE ON SCHEMA public TO readonly;
 CREATE USER redash WITH PASSWORD '*****';
 GRANT readonly TO redash;
+ALTER ROLE redash SET statement_timeout = '45s';
 ```
 
 See [this document](https://github.com/hasadna/anyway/blob/dev/docs/REDASH.md) for how to grant permissions for tables to this user.
