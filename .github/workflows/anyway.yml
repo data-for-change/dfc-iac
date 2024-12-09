@@ -31,8 +31,6 @@ jobs:
         pip install -r requirements.txt &&\
         echo "Step 5: Logging in to Vault" &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
-        #echo "Step 6: Creating Selenium data folder" &&\
-        #bin/apps.py create_selenium_data_folder &&\
         echo "Step 7: Deploying app" &&\
         bin/apps.py deploy_app anyway &&\
         echo "Step 8: Checking Docker Compose status" &&\
