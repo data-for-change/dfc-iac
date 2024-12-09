@@ -192,6 +192,10 @@ def compose(app_name, *args):
     ssh('docker', 'compose', '--project-directory', f'~/apps/{app_name}', *args)
 
 
+def create_selenium_data_folder():
+    ssh('mkdir -p /tmp/selenium-tempdata && sudo chown 1200:1201 /tmp/selenium-tempdata')
+
+
 def main(cmd, *args):
     res = globals()[cmd](*args)
     if res is None:
