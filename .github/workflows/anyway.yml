@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/anyway.yml'
       - 'apps/anyway/**'
+  workflow_dispatch:
+  
 jobs:
   anyway:
     runs-on: ubuntu-22.04
