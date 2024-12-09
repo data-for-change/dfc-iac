@@ -18,12 +18,20 @@ jobs:
         VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
         CI: "true"
       run: |
+        echo "Step 1: Installing CI tools" &&\
         curl -s https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/65a0704332e63d51f63981dbb25cd83682dc4078/bin/github_actions_install.sh \
           | bash -s 4ed9d7055f0aa9629de1291fe0f42e154709b0b6 OriHoch/uumpa-ci-toolbox &&\
+        echo "Step 2: Self-checkout" &&\
         uci github actions self-checkout --config-user-name "dfc-iac-anyway-ci" &&\
+        echo "Step 3: Installing Vault CLI" &&\
         uci vault install --version $VAULT_CLI_VERSION &&\
+        echo "Step 4: Installing Python dependencies" &&\
         pip install -r requirements.txt &&\
+        echo "Step 5: Logging in to Vault" &&\
         export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
+        echo "Step 6: Creating Selenium data folder" &&\
         bin/apps.py create_selenium_data_folder &&\
+        echo "Step 7: Deploying app" &&\
         bin/apps.py deploy_app anyway &&\
+        echo "Step 8: Checking Docker Compose status" &&\
         bin/apps.py compose anyway ps
