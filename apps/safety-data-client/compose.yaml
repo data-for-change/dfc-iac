@@ -9,7 +9,7 @@ services:
       - "traefik.http.routers.safety-data-client.rule=Host(`safety-data.anyway.co.il`)"
       - "traefik.http.routers.acme-challenge.rule=PathPrefix(`/.well-known/acme-challenge/`)"
       - "traefik.http.routers.acme-challenge.entrypoints=web"
-      - "traefik.http.routers.acme-challenge.service=acme-challenge@internal"
+      - "traefik.http.routers.acme-challenge.tls.certresolver=letsencrypt"
       
 networks:
   dfc:
