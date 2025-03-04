@@ -7,9 +7,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.services.safety-data-client.loadbalancer.server.port=80"
       - "traefik.http.routers.safety-data-client.rule=Host(`safety-data.anyway.co.il`)"
-      - "traefik.http.routers.acme-challenge.rule=PathPrefix(`/.well-known/acme-challenge/`)"
-      - "traefik.http.routers.acme-challenge.entrypoints=web"
-      - "traefik.http.routers.acme-challenge.tls.certresolver=letsencrypt"
       
 networks:
   dfc:
