@@ -161,6 +161,15 @@ services:
     env_file:
       - ./secrets/db-backup.env
 
+  safety-data-client:
+    networks: [ dfc ]
+    image: ghcr.io/data-for-change/safety-data-client:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.safety-data-client.loadbalancer.server.port=80"
+      - "traefik.http.routers.safety-data-client.rule=Host(`safety-data.anyway.co.il`)"
+
 networks:
   dfc:
     external: true
