@@ -163,7 +163,8 @@ services:
 
   safety-data-client:
     networks: [ dfc ]
-    image: ${SAFETY_DATA_CLIENT_IMAGE: ghcr.io/data-for-change/safety-data-client:latest}
+    image: ghcr.io/data-for-change/safety-data-client:latest
+    #image: ${SAFETY_DATA_CLIENT_IMAGE: ghcr.io/data-for-change/safety-data-client:latest}
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
