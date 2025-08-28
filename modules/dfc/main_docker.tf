@@ -73,7 +73,7 @@ resource "aws_eip_association" "main_docker" {
 resource "aws_instance" "main_docker" {
   ami = "ami-0faab6bdbac9486fb"
   availability_zone = "eu-central-1b"
-  instance_type = "m6a.large"
+  instance_type = "m6a.4xlarge"
   vpc_security_group_ids = [aws_security_group.default.id]
   subnet_id = aws_subnet.default.id
   tags = {
