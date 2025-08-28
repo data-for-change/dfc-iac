@@ -1,5 +1,5 @@
 x-anyway-command: &x-anyway-command
-  ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "-t", "120", "anyway:app"]
+  ["gunicorn", "-b", "0.0.0.0:5000", "-k", "gevent", "-w", "4", "-t", "120", "anyway:app"]
 
 x-anyway-environment: &x-anyway-environment
   PROXYFIX_X_FOR: "1"
