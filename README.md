@@ -62,6 +62,12 @@ Prerequisites:
 
 ### Running locally
 
+Set env vars:
+```
+export VAULT_TOKEN=<paste token here>
+export VAULT_ADDR=https://vault.dataforchange.org.il
+```
+
 Initialize (should only be done once):
 
 ```
