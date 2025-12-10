@@ -21,8 +21,8 @@ jobs:
         CI: "true"
       run: |
         echo "Step 1: Installing CI tools" &&\
-        curl -s https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/65a0704332e63d51f63981dbb25cd83682dc4078/bin/github_actions_install.sh \
-          | bash -s 4ed9d7055f0aa9629de1291fe0f42e154709b0b6 OriHoch/uumpa-ci-toolbox &&\
+        curl -s https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04/bin/github_actions_install.sh \
+          | bash -s ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04 OriHoch/uumpa-ci-toolbox &&\
         echo "Step 2: Self-checkout" &&\
         uci github actions self-checkout --config-user-name "dfc-iac-anyway-ci" &&\
         echo "Step 3: Installing Vault CLI" &&\
