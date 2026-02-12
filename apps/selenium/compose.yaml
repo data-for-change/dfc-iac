@@ -24,12 +24,12 @@ services:
       - -c
       - |
         docker stop selenium-selenium-chrome-node-1 selenium-selenium-chrome-node-nginx-1
-        rm -rf /var/selenium/tempdata/*
-        rm -rf /var/selenium/tempdata/.*
+        rm -rf /tmp/*
+        rm -rf /tmp/.*
         docker start selenium-selenium-chrome-node-1 selenium-selenium-chrome-node-nginx-1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp/selenium-tempdata:/var/selenium/tempdata
+      - /data/selenium-tempdata:/tmp
 
   selenium-chrome-node-nginx:
     networks: [dfc]
@@ -41,7 +41,7 @@ services:
     image: nginx@sha256:63b44e8ddb83d5dd8020327c1f40436e37a6fffd3ef2498a6204df23be6e7e94
     restart: unless-stopped
     volumes:
-      - /tmp/selenium-tempdata:/var/selenium/tempdata
+      - /data/selenium-tempdata:/tmp
       - ./nginx-default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./setuser.sh:/docker-entrypoint.d/99-setuser.sh:ro
 
