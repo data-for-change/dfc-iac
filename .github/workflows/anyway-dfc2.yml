@@ -1,4 +1,4 @@
-name: anyway CI
+name: dfc2 anyway CI
 on:
   push:
     paths:
