@@ -13,9 +13,11 @@ KEYS_MAP = {
 }
 
 
-def main(images):
+def main(images, apps_dir=None):
+    if not apps_dir:
+        apps_dir = 'apps'
     images = json.loads(images)
-    with open('apps/anyway/.env', 'r') as f:
+    with open(f'{apps_dir}/anyway/.env', 'r') as f:
         lines = f.readlines()
     new_lines = []
     for line in lines:
@@ -25,9 +27,9 @@ def main(images):
             if key in KEYS_MAP and KEYS_MAP[key] in images:
                 line = '{}={}'.format(key, images[KEYS_MAP[key]]).replace('docker.pkg.github.com', 'ghcr.io')
             new_lines.append(line)
-    with open('apps/anyway/.env', 'w') as f:
+    with open(f'{apps_dir}/anyway/.env', 'w') as f:
         f.write('\n'.join(new_lines))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(*sys.argv[1:])
