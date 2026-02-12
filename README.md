@@ -32,6 +32,8 @@ Set the Token in an env var:
 export VAULT_TOKEN=<paste token here>
 ```
 
+We have 2 environments, for the 2nd env run bin/apps-dfc2.py
+
 You might need to get a new token occasionally, if you get an error message about an invalid token, just repeat the above steps.
 
 Now you can run the apps management script to manage the apps, following are some examples:

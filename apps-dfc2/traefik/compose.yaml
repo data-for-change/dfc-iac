@@ -1,0 +1,37 @@
+services:
+  traefik:
+    image: traefik:v2.11.37@sha256:05ff868caaf67ef937b3228d4fe734ef8a353eab2123ac54f2a7b622d1d4b270
+    restart: unless-stopped
+    volumes:
+      - ./secrets/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /data/traefik/acme:/etc/traefik/acme
+      - ./dynamic_conf:/etc/traefik/dynamic_conf
+    networks: [dfc]
+    ports:
+      - "80:80"
+      - "443:443"
+
+networks:
+  dfc:
+    external: true
+
+x-pre-deploy:
+  - mkdir -p dynamic_conf && cp secrets/selenium_auth.yaml dynamic_conf/selenium_auth.yaml
+
+x-on-file-change:
+  - docker compose restart traefik
+
+#x-files:
+#  anyway_redirects.yaml:
+#    target: dynamic_conf/anyway_redirects.yaml
+
+x-secrets:
+  files:
+    traefik.yaml:
+      values:
+        ACME_EMAIL: "vault:projects/iac/letsencrypt:acme_email"
+    selenium_auth.yaml:
+      values:
+        SELENIUM_USERNAME: "vault:projects/k8s/selenium/secrets:hub-username"
+        SELENIUM_HASHED_PASSWORD: "vault:projects/k8s/selenium/secrets:hub-password-htpasswd"

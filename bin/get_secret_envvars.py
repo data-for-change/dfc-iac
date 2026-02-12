@@ -27,6 +27,7 @@ def main():
         'TF_VAR_infrastructure_root_domain': vault_read('projects/iac/dns')['infrastructure-root-domain'],
         'KUBECONFIG': '.kubeconfig',
         'KUBE_CONFIG_PATH': '.kubeconfig',
+        'TF_VAR_aws_default_ssh_key_name': vault_read('projects/iac/aws')['default-ssh-key-name'],
     }
     envvars = []
     for k, v in values.items():

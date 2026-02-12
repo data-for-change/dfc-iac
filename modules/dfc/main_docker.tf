@@ -1,11 +1,13 @@
 resource "aws_vpc" "default" {
+  count = var.name_prefix == "" ? 1 : 0
   cidr_block = "172.31.0.0/16"
 }
 
 resource "aws_security_group" "default" {
-  name = "default"
-  description = "default VPC security group"
-  vpc_id = aws_vpc.default.id
+  count = var.name_prefix == "" ? 1 : 0
+  name = "${var.name_prefix}default"
+  description = "${var.name_prefix}default VPC security group"
+  vpc_id = aws_vpc.default[0].id
   egress {
     cidr_blocks = ["0.0.0.0/0"]
     from_port = 0
@@ -53,9 +55,9 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_subnet" "default" {
-  vpc_id = aws_vpc.default.id
+  vpc_id = var.name_prefix == "" ? aws_vpc.default[0].id : var.vpc_id
   availability_zone = "eu-central-1b"
-  cidr_block = "172.31.32.0/20"
+  cidr_block = var.subnet_cidr
   map_public_ip_on_launch = true
 }
 
@@ -74,32 +76,44 @@ resource "aws_instance" "main_docker" {
   ami = "ami-0faab6bdbac9486fb"
   availability_zone = "eu-central-1b"
   instance_type = "m6a.large"
-  vpc_security_group_ids = [aws_security_group.default.id]
+  vpc_security_group_ids = [
+    var.name_prefix == "" ? aws_security_group.default[0].id : var.security_group_id
+  ]
   subnet_id = aws_subnet.default.id
   tags = {
-    Name = "main-docker"
+    Name = "${var.name_prefix}main-docker"
   }
+  dynamic "root_block_device" {
+    for_each = var.name_prefix == "" ? [] : [1]
+    content {
+      volume_type = "gp3"
+      volume_size = 100
+    }
+  }
+  key_name = var.aws_default_ssh_key_name
 }
 
 resource "aws_ebs_volume" "main_docker" {
   availability_zone = "eu-central-1b"
   size = 500
   tags = {
-      Name = "main-docker"
+      Name = "${var.name_prefix}main-docker"
   }
   type = "gp3"
 }
 
 resource "aws_ebs_volume" "main_docker_root" {
+  count = var.name_prefix == "" ? 1 : 0
   availability_zone = "eu-central-1b"
   size = 100
   type = "gp3"
 }
 
 resource "aws_volume_attachment" "main_docker_root" {
+  count = var.name_prefix == "" ? 1 : 0
   device_name = "/dev/sda1"
   instance_id = aws_instance.main_docker.id
-  volume_id = aws_ebs_volume.main_docker_root.id
+  volume_id = aws_ebs_volume.main_docker_root[0].id
 }
 
 resource "aws_volume_attachment" "main_docker" {
@@ -109,12 +123,12 @@ resource "aws_volume_attachment" "main_docker" {
 }
 
 resource "aws_dlm_lifecycle_policy" "main_docker_backup" {
-  description = "main docker backup"
+  description = "${var.name_prefix}main docker backup"
   execution_role_arn = "arn:aws:iam::896911843692:role/service-role/AWSDataLifecycleManagerDefaultRole"
   policy_details {
     resource_types = ["INSTANCE"]
     target_tags = {
-      Name = "main-docker"
+      Name = "${var.name_prefix}main-docker"
     }
     parameters {
       exclude_boot_volume = false

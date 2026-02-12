@@ -1,10 +1,11 @@
-resource "null_resource" "redash_secrets" {
-  lifecycle {
-    ignore_changes = all
-  }
-  provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command = <<-EOF
+# resource "null_resource" "redash_secrets" {
+#   count = var.name_prefix == "" ? 1 : 0
+#   lifecycle {
+#     ignore_changes = all
+#   }
+#   provisioner "local-exec" {
+#     interpreter = ["bash", "-c"]
+#     command = <<-EOF
 # this should only run once!
 #      COOKIE_SECRET=$(pwgen -1s 32)
 #      SECRET_KEY=$(pwgen -1s 32)
@@ -15,6 +16,6 @@ resource "null_resource" "redash_secrets" {
 #        "secret_key=$SECRET_KEY" \
 #        "postgres_password=$POSTGRES_PASSWORD" \
 #        "redash_database_url=$REDASH_DATABASE_URL"
-    EOF
-  }
-}
+#     EOF
+#   }
+# }

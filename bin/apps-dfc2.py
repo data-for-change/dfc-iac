@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 VAULT_ADDR = os.environ.get('VAULT_ADDR', 'https://vault.dataforchange.org.il')
 VAULT_TOKEN = os.environ.get('VAULT_TOKEN')
 ETC_DFC_DOCKER = '/etc/dfc/docker' if os.environ.get("CI") != "true" else '/tmp/dfc/docker'
+ENV_NAME = "dfc2"
 
 
 @lru_cache()
@@ -26,18 +27,19 @@ def get_vault_kv_path(path):
 
 
 def ssh_init():
-    if not os.path.exists(f'{ETC_DFC_DOCKER}/id_ed25519') or not os.path.exists(f'{ETC_DFC_DOCKER}/hostname'):
+    hostname_filename = f'hostname-{ENV_NAME}'
+    if not os.path.exists(f'{ETC_DFC_DOCKER}/id_ed25519') or not os.path.exists(f'{ETC_DFC_DOCKER}/{hostname_filename}'):
         data = get_vault_kv_path('projects/iac/docker-server')
-        hostname = data['hostname']
+        hostname = data[f'hostname-{ENV_NAME}']
         id_ed25519 = data['id_ed25519']
         os.makedirs(ETC_DFC_DOCKER, exist_ok=True)
-        with open(f'{ETC_DFC_DOCKER}/hostname', 'w') as f:
+        with open(f'{ETC_DFC_DOCKER}/{hostname_filename}', 'w') as f:
             f.write(hostname)
         with open(f'{ETC_DFC_DOCKER}/id_ed25519', 'w') as f:
             f.write(id_ed25519)
         subprocess.check_call(['chmod', '600', f'{ETC_DFC_DOCKER}/id_ed25519'])
     else:
-        with open(f'{ETC_DFC_DOCKER}/hostname') as f:
+        with open(f'{ETC_DFC_DOCKER}/{hostname_filename}') as f:
             hostname = f.read().strip()
     return hostname
 
@@ -60,7 +62,7 @@ def get_secret_value(value, key=None, app_name=None):
         type_ = value.get('type') or 'template'
         assert type_ == 'template'
         template_filename = value.get('template_filename') or f'{key}.template'
-        with open(f'apps/{app_name}/{template_filename}') as f:
+        with open(f'apps-{ENV_NAME}/{app_name}/{template_filename}') as f:
             template = f.read()
         for k, v in value.get('values').items():
             v = get_secret_value(v)
@@ -124,7 +126,7 @@ def copy_files(app_conf, app_name, stats):
     for src, file_conf in app_conf.get('x-files', {}).items():
         dst = file_conf.get('target') or src
         ssh(f'mkdir -p ~/apps/.new.{app_name}/{os.path.dirname(dst)}')
-        scp(f'apps/{app_name}/{src}', f'~/apps/.new.{app_name}/{dst}', stats)
+        scp(f'apps-{ENV_NAME}/{app_name}/{src}', f'~/apps/.new.{app_name}/{dst}', stats)
 
 
 def deploy_cronjob(service_name, service, app_name):
@@ -139,8 +141,8 @@ def deploy_cronjob(service_name, service, app_name):
 
 def deploy_app(app_name, *args):
     skip_deploy = '--skip-deploy' in args
-    assert os.path.exists(f'./apps/{app_name}/compose.yaml')
-    with open(f'./apps/{app_name}/compose.yaml') as f:
+    assert os.path.exists(f'./apps-{ENV_NAME}/{app_name}/compose.yaml')
+    with open(f'./apps-{ENV_NAME}/{app_name}/compose.yaml') as f:
         app_conf = yaml.safe_load(f)
     ssh(f'rm -rf ~/apps/.new.{app_name}')
     stats = {
@@ -149,7 +151,7 @@ def deploy_app(app_name, *args):
     copy_secrets(app_conf, app_name, stats)
     copy_files(app_conf, app_name, stats)
     ssh(f'mkdir -p ~/apps/.new.{app_name}')
-    scp(f'./apps/{app_name}/compose.yaml', f'~/apps/.new.{app_name}/compose.yaml')
+    scp(f'./apps-{ENV_NAME}/{app_name}/compose.yaml', f'~/apps/.new.{app_name}/compose.yaml')
     ssh(f'''
         [ -e ~/apps/.old.{app_name} ] && sudo rm -rf ~/apps/.old.{app_name}
         [ -e ~/apps/{app_name} ] && sudo mv ~/apps/{app_name} ~/apps/.old.{app_name}
@@ -184,7 +186,7 @@ def deploy_app(app_name, *args):
 
 
 def deploy_all_apps():
-    for app_name in os.listdir('./apps'):
+    for app_name in os.listdir(f'./apps-{ENV_NAME}'):
         deploy_app(app_name)
 
 

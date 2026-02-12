@@ -4,7 +4,7 @@ data "cloudflare_zone" "infrastructure_root_domain" {
 
 resource "cloudflare_record" "main_docker" {
   zone_id = data.cloudflare_zone.infrastructure_root_domain.id
-  name    = "docker-main"
+  name    = "${var.name_prefix}docker-main"
   value   = aws_eip.main_docker.public_ip
   type    = "A"
   allow_overwrite = false
@@ -13,7 +13,7 @@ resource "cloudflare_record" "main_docker" {
 
 resource "cloudflare_record" "main_docker_target" {
   zone_id = data.cloudflare_zone.infrastructure_root_domain.id
-  name    = "*"
+  name    = "*${var.name_prefix == "" ? "" : ".${trim(var.name_prefix,"-")}"}"
   value   = "${cloudflare_record.main_docker.name}.${data.cloudflare_zone.infrastructure_root_domain.name}"
   type    = "CNAME"
 }
