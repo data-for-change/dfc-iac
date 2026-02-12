@@ -1,0 +1,41 @@
+name: anyway CI
+on:
+  push:
+    paths:
+      - '.github/workflows/anyway-dfc2.yml'
+      - 'apps-dfc2/anyway/**'
+  workflow_dispatch:
+  
+jobs:
+  anyway:
+    runs-on: ubuntu-22.04
+    steps:
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        VAULT_CLI_VERSION: "1.10.4"
+        VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+        # python3 vault/create_policy.py readonly
+        # python3 vault/create_approle.py terraform_readonly readonly
+        VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+        VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+        CI: "true"
+      run: |
+        echo "Step 1: Installing CI tools" &&\
+        curl -s https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04/bin/github_actions_install.sh \
+          | bash -s ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04 OriHoch/uumpa-ci-toolbox &&\
+        echo "Step 2: Self-checkout" &&\
+        uci github actions self-checkout --config-user-name "dfc-iac-anyway-ci" &&\
+        echo "Step 3: Installing Vault CLI" &&\
+        uci vault install --version $VAULT_CLI_VERSION &&\
+        echo "Step 4: Installing Python dependencies" &&\
+        pip install -r requirements.txt &&\
+        echo "Step 5: Logging in to Vault" &&\
+        export VAULT_TOKEN="$(uci vault approle-login $VAULT_ROLE_ID $VAULT_SECRET_ID)" &&\
+        echo "Step 6: Changing permissions for bin/apps-dfc2.py" &&\
+        chmod +x bin/apps-dfc2.py &&\
+        echo "Step 7: Creating Selenium data folder" &&\
+        bin/apps-dfc2.py create_selenium_data_folder &&\
+        echo "Step 8: Deploying app" &&\
+        bin/apps-dfc2.py deploy_app anyway &&\
+        echo "Step 9: Checking Docker Compose status" &&\
+        bin/apps-dfc2.py compose anyway ps
