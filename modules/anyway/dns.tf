@@ -5,7 +5,7 @@ locals {
     "airflow" = local.k8s_dns_record
     "reports" = local.k8s_dns_record
     "www" = local.k8s_dns_record
-    "safety-data" = local.k8s_dns_record
+    "safety-data" = {type="CNAME", records=["safety-data.dfc2.anyway.co.il"]}
     "email" = {type="CNAME", records=["mailgun.org."]}
     "media" = {type="CNAME", records=["anyway-infographics.web.app."]}
     "ws" = {type="CNAME", records=["anyway.co.il."]}
