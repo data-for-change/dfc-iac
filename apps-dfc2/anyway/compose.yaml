@@ -119,7 +119,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.airflow-webserver.loadbalancer.server.port=8080"
-      - "traefik.http.routers.airflow-webserver.rule=Host(`airflow.dfc2.anyway.co.il`)"
+      - "traefik.http.routers.safety-data-client.rule=Host(`safety-data.dfc2.anyway.co.il`) || Host(`safety-data.anyway.co.il`)"
 
   reports:
     hostname: anyway-reports
