@@ -147,19 +147,19 @@ services:
       - "traefik.http.routers.anyway-nginx.tls=true"
       - "traefik.http.routers.anyway-nginx.tls.certresolver=dfc"
 
- db-backup-cronjob:
-   x-cronjob:
-     schedule: "10 0 * * *"
-   networks: [dfc]
-   image: ${PIN_DB_BACKUP_IMAGE:-ghcr.io/hasadna/anyway/db_backup:latest}
-   environment:
-     DBDUMP_S3_FILE_PREFIX: ""
-     DBDUMP_HOST: "anyway-db"
-     DBDUMP_USER: "postgres"
-     DBDUMP_FULL_BUCKET: "dfc2-anyway-full-db-dumps"
-     DBDUMP_PARTIAL_BUCKET: "dfc2-anyway-partial-db-dumps"
-   env_file:
-     - ./secrets/db-backup.env
+  db-backup-cronjob:
+    x-cronjob:
+      schedule: "10 0 * * *"
+    networks: [dfc]
+    image: ${PIN_DB_BACKUP_IMAGE:-ghcr.io/hasadna/anyway/db_backup:latest}
+    environment:
+      DBDUMP_S3_FILE_PREFIX: ""
+      DBDUMP_HOST: "anyway-db"
+      DBDUMP_USER: "postgres"
+      DBDUMP_FULL_BUCKET: "dfc2-anyway-full-db-dumps"
+      DBDUMP_PARTIAL_BUCKET: "dfc2-anyway-partial-db-dumps"
+    env_file:
+      - ./secrets/db-backup.env
 
   safety-data-client:
     networks: [ dfc ]
@@ -241,7 +241,7 @@ x-secrets:
       DBRESTORE_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/dfc2/aws_db_dumps_reader_user:secret_access_key"
       DBRESTORE_SET_ANYWAY_PASSWORD: "vault:projects/anyway/dfc2/k8s-secret-db:DBRESTORE_SET_ANYWAY_PASSWORD"
       POSTGRES_PASSWORD: "vault:projects/anyway/dfc2/k8s-secret-db:POSTGRES_PASSWORD"
-   db-backup:
-     DBDUMP_AWS_ACCESS_KEY_ID: "vault:projects/anyway/dfc2/aws_db_dumps_writer_user:access_key_id"
-     DBDUMP_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/dfc2/aws_db_dumps_writer_user:secret_access_key"
-     DBDUMP_PASSWORD: "vault:projects/anyway/dfc2/k8s-secret-db-backup:DBDUMP_PASSWORD"
+    db-backup:
+      DBDUMP_AWS_ACCESS_KEY_ID: "vault:projects/anyway/dfc2/aws_db_dumps_writer_user:access_key_id"
+      DBDUMP_AWS_SECRET_ACCESS_KEY: "vault:projects/anyway/dfc2/aws_db_dumps_writer_user:secret_access_key"
+      DBDUMP_PASSWORD: "vault:projects/anyway/dfc2/k8s-secret-db-backup:DBDUMP_PASSWORD"
