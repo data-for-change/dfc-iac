@@ -5,6 +5,8 @@ locals {
         "dfc-anyway.co.il" = {}
         "dfc-anyway-cbs" = {}
         "dfc-anyway-partial-db-dumps" = {}
+        "dfc2-anyway-full-db-dumps" = {}
+        "dfc2-anyway-partial-db-dumps" = {}
     }
 }
 

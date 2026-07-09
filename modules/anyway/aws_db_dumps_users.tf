@@ -116,3 +116,82 @@ resource "aws_iam_user_policy" "partial_db_dumps_reader" {
 }
 EOF
 }
+
+resource "aws_iam_user" "dfc2_db_dumps_writer" {
+    name = "dfc2-anyway-db-dumps-writer"
+}
+
+resource "null_resource" "dfc2_aws_db_dumps_writer_keys_vault" {
+    provisioner "local-exec" {
+        command = "python3 vault/write_aws_access_keys.py ${aws_iam_user.dfc2_db_dumps_writer.name} projects/anyway/dfc2/aws_db_dumps_writer_user"
+    }
+}
+
+resource "aws_iam_user_policy" "dfc2_db_dumps_writer" {
+    name = "dfc2-anyway-db-dumps-write"
+    user = aws_iam_user.dfc2_db_dumps_writer.name
+    policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "statement1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:HeadBucket",
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-full-db-dumps"].id}",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-full-db-dumps"].id}/*",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-partial-db-dumps"].id}",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-partial-db-dumps"].id}/*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_user" "dfc2_db_dumps_reader" {
+    name = "dfc2-anyway-db-dumps-reader"
+}
+
+resource "null_resource" "dfc2_aws_db_dumps_reader_keys_vault" {
+    provisioner "local-exec" {
+        command = "python3 vault/write_aws_access_keys.py ${aws_iam_user.dfc2_db_dumps_reader.name} projects/anyway/dfc2/aws_db_dumps_reader_user"
+    }
+}
+
+resource "aws_iam_user_policy" "dfc2_db_dumps_reader" {
+    name = "dfc2-anyway-db-dumps-reader"
+    user = aws_iam_user.dfc2_db_dumps_reader.name
+    policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "statement1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetBucketLocation",
+                "s3:HeadBucket",
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:HeadObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-full-db-dumps"].id}",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-full-db-dumps"].id}/*",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-partial-db-dumps"].id}",
+                "arn:aws:s3:::${aws_s3_bucket.bucket["dfc2-anyway-partial-db-dumps"].id}/*"
+            ]
+        }
+    ]
+}
+EOF
+}
