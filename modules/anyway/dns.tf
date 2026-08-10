@@ -9,6 +9,18 @@ locals {
     "email" = {type="CNAME", records=["mailgun.org."]}
     "media" = {type="CNAME", records=["anyway-infographics.web.app."]}
     "ws" = {type="CNAME", records=["anyway.co.il."]}
+    "qpixbm5opqtcsv64uhbfd476sbxca6wd._domainkey" = {
+      type    = "CNAME"
+      records = ["qpixbm5opqtcsv64uhbfd476sbxca6wd.dkim.amazonses.com."]
+    }
+    "uu4k534e6aixnupykf5u3zjmbwd6s2cx._domainkey" = {
+      type    = "CNAME"
+      records = ["uu4k534e6aixnupykf5u3zjmbwd6s2cx.dkim.amazonses.com."]
+    }
+    "lojh3b5ywy5hrtpf7fgln4b4t5doqosn._domainkey" = {
+      type    = "CNAME"
+      records = ["lojh3b5ywy5hrtpf7fgln4b4t5doqosn.dkim.amazonses.com."]
+    }
   }
   oway_org_il_dns_records = {
     "email" = {type="CNAME", records=["mailgun.org"]}
