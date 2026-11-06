@@ -4,11 +4,11 @@ locals {
     "airflow-data" = local.k8s_dns_record
     "airflow" = local.k8s_dns_record
     "reports" = local.k8s_dns_record
-    "www" = local.k8s_dns_record
+    "www" = local.dfc2_k8s_dns_record
     "safety-data" = {type="CNAME", records=["safety-data.dfc2.anyway.co.il"]}
     "email" = {type="CNAME", records=["mailgun.org."]}
     "media" = {type="CNAME", records=["anyway-infographics.web.app."]}
-    "ws" = {type="CNAME", records=["anyway.co.il."]}
+    "ws" = local.k8s_dns_record
     "qpixbm5opqtcsv64uhbfd476sbxca6wd._domainkey" = {
       type    = "CNAME"
       records = ["qpixbm5opqtcsv64uhbfd476sbxca6wd.dkim.amazonses.com."]
@@ -51,7 +51,7 @@ resource "aws_route53_record" "anyway_co_il_root" {
   zone_id = data.aws_route53_zone.anyway_co_il.zone_id
   name = data.aws_route53_zone.anyway_co_il.name
   type = "A"
-  records = [var.dfc_main_docker_ip]
+  records = [var.dfc2_main_docker_ip]
   ttl = "300"
 }
 
