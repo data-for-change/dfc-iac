@@ -10,6 +10,7 @@ on:
         options:
           - dfc
           - dfc2
+          - both
 
 permissions:
   contents: read
@@ -43,21 +44,28 @@ jobs:
           echo "::add-mask::$AWS_SECRET_ACCESS_KEY"
 
           case "$TARGET_INSTANCE" in
-            dfc)  NAME_TAG="main-docker" ;;
-            dfc2) NAME_TAG="dfc2-main-docker" ;;
+            dfc)  NAME_TAGS=("main-docker") ;;
+            dfc2) NAME_TAGS=("dfc2-main-docker") ;;
+            both) NAME_TAGS=("main-docker" "dfc2-main-docker") ;;
             *) echo "Unknown instance: $TARGET_INSTANCE"; exit 1 ;;
           esac
 
-          INSTANCE_IDS=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=$NAME_TAG" "Name=instance-state-name,Values=running" \
-            --query 'Reservations[].Instances[].InstanceId' \
-            --output text)
+          INSTANCE_IDS_TO_REBOOT=()
 
-          read -r -a IDS <<< "$INSTANCE_IDS"
-          if [[ ${#IDS[@]} -ne 1 || "${IDS[0]}" == "None" ]]; then
-            echo "Expected one running instance tagged $NAME_TAG; found: $INSTANCE_IDS"
-            exit 1
-          fi
+          for NAME_TAG in "${NAME_TAGS[@]}"; do
+            INSTANCE_IDS=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=$NAME_TAG" "Name=instance-state-name,Values=running" \
+              --query 'Reservations[].Instances[].InstanceId' \
+              --output text)
 
-          echo "Requesting reboot of $TARGET_INSTANCE (${IDS[0]})"
-          aws ec2 reboot-instances --instance-ids "${IDS[0]}"
+            read -r -a IDS <<< "$INSTANCE_IDS"
+            if [[ ${#IDS[@]} -ne 1 || "${IDS[0]}" == "None" ]]; then
+              echo "Expected one running instance tagged $NAME_TAG; found: $INSTANCE_IDS"
+              exit 1
+            fi
+
+            INSTANCE_IDS_TO_REBOOT+=("${IDS[0]}")
+          done
+
+          echo "Requesting reboot of $TARGET_INSTANCE: ${INSTANCE_IDS_TO_REBOOT[*]}"
+          aws ec2 reboot-instances --instance-ids "${INSTANCE_IDS_TO_REBOOT[@]}"
