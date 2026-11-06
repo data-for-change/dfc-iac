@@ -1,0 +1,63 @@
+name: Reboot EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      instance:
+        description: Which instance to reboot
+        required: true
+        type: choice
+        options:
+          - dfc
+          - dfc2
+
+permissions:
+  contents: read
+
+jobs:
+  reboot:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Find and reboot selected instance
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VAULT_CLI_VERSION: "1.10.4"
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRET_ID: ${{ secrets.VAULT_SECRET_ID }}
+          TARGET_INSTANCE: ${{ inputs.instance }}
+        run: |
+          set -euo pipefail
+
+          curl -fsSL https://raw.githubusercontent.com/OriHoch/uumpa-ci-toolbox/ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04/bin/github_actions_install.sh \
+            | bash -s ad10e0f8f4bf0ab7ba04d777ee51dc49444d1c04 OriHoch/uumpa-ci-toolbox
+
+          uci vault install --version "$VAULT_CLI_VERSION"
+          export VAULT_TOKEN="$(uci vault approle-login "$VAULT_ROLE_ID" "$VAULT_SECRET_ID")"
+
+          export AWS_ACCESS_KEY_ID="$(vault kv get -field=access_key_id kv/projects/anyway/prod/aws_prod_app_user)"
+          export AWS_SECRET_ACCESS_KEY="$(vault kv get -field=secret_access_key kv/projects/anyway/prod/aws_prod_app_user)"
+          export AWS_DEFAULT_REGION=eu-central-1
+
+          echo "::add-mask::$AWS_ACCESS_KEY_ID"
+          echo "::add-mask::$AWS_SECRET_ACCESS_KEY"
+
+          case "$TARGET_INSTANCE" in
+            dfc)  NAME_TAG="main-docker" ;;
+            dfc2) NAME_TAG="dfc2-main-docker" ;;
+            *) echo "Unknown instance: $TARGET_INSTANCE"; exit 1 ;;
+          esac
+
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=$NAME_TAG" "Name=instance-state-name,Values=running" \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text)
+
+          read -r -a IDS <<< "$INSTANCE_IDS"
+          if [[ ${#IDS[@]} -ne 1 || "${IDS[0]}" == "None" ]]; then
+            echo "Expected one running instance tagged $NAME_TAG; found: $INSTANCE_IDS"
+            exit 1
+          fi
+
+          echo "Requesting reboot of $TARGET_INSTANCE (${IDS[0]})"
+          aws ec2 reboot-instances --instance-ids "${IDS[0]}"
